@@ -1,0 +1,90 @@
+<!doctype html>
+<html>
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
+    <link rel="stylesheet" href="/main.css">
+
+    <title>Hello, Chatting Page!</title>
+</head>
+
+<body>
+    <!-- ejs파일에서만 적용가능 -->
+    <%- include('nav.html') %>
+
+        <h3 class="container mt-4 text-center"><strong>😊채팅방😊</strong></h3>
+        <div class="container p-4 detail">
+
+            <div class="row">
+                <div class="col-3">
+                    <ul class="list-group chat-list">
+                        <% for ( let i=0; i < data.length ;i++){ %>
+                            <li class="list-group-item" data-id="<%= data[i]._id %>">
+                                <h6>
+                                    <%= data[i].title %>
+                                </h6>
+                                <h6 class="text-small">
+                                    <%= data[i].member[0] %>
+                                </h6>
+                            </li>
+                            <% } %>
+                    </ul>
+                </div>
+
+                <div class="col-9 p-0">
+                    <div class="chat-room">
+                        <ul class="list-group chat-content">
+                            <li><span class="chat-box">채팅방1 내용</span></li>
+                            <li><span class="chat-box">채팅방1 내용</span></li>
+                            <li><span class="chat-box mine">채팅방1 내용</span></li>
+                        </ul>
+                        <div class="input-group">
+                            <input class="form-control" id="chat-input">
+                            <button class="btn btn-secondary" id="send">전송</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+
+        <script>
+            var nowcli_id;
+            var eventSource;
+            $('.list-group-item').click(function () {
+                nowcli_id = this.dataset.id;
+                $('.chat-content').html('');
+
+                if (eventSource != undefined) {
+                    eventSource.close()
+                }
+                // 데이터수신
+                eventSource = new EventSource('/message/' + nowcli_id); // 실시간 소통채널 입장
+                eventSource.addEventListener('test', function (e) {
+                    var serbring = JSON.parse(e.data); // 서버에서 보낸 데이터
+                    serbring.forEach(function (i) {
+                        $('.chat-content').append('<li><span class="chat-box">' + i.content + '</span></li>')
+                    });
+                });
+            });
+
+            $('#send').click(function () {
+                var chat_input = $('#chat-input').val();
+                var sendch = {
+                    parent: nowcli_id,
+                    content: chat_input,
+                }
+                $.post('/message', sendch).then(() => {
+                    console.log('전송성공!')
+                })
+            })
+        </script>
+</body>
+
+</html>
